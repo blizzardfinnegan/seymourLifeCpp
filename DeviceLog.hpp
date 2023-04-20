@@ -5,12 +5,12 @@
 class DeviceLog
 {
 		private:
-				const Device device;
-				const int reboots;
-				const int bps;
-				const int temps;
+				std::string serial;
+				int reboots;
+				int bps;
+				int temps;
 		public:
-				DeviceLog(Device,int=0,int=0,int=0);
+				DeviceLog(std::string="",int=0,int=0,int=0);
 				int getReboots();
 				std::string getSerial();
 				int getSuccessfulBPs();

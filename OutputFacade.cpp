@@ -10,4 +10,5 @@ void OutputFacade::write(DeviceLog log)
 		fileOut << "Reboot count: " << log.getReboots() << std::endl ;
 		fileOut << "Successful BP tests: " << log.getSuccessfulBPs() << std::endl;
 		fileOut << "Successful temperature tests: " << log.getSuccessfulTemps() << std::endl;
+		fileOut.close();
 };
