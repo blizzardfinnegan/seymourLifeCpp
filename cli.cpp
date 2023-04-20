@@ -30,6 +30,9 @@ void logWriter(code_machina::BlockingQueue<std::string> loggingQueue)
 		}
 		logFile.close();
 };
+
+
+
 int main()
 {
 		code_machina::BlockingQueue<std::string> loggingQueue(INT_MAX);

@@ -76,7 +76,11 @@ class Device
 				State state;
 				char errorBuffer[errorBufferSize];
 				char msgBuffer[msgBufferSize];
+				int reboots;
+				int bps;
+				int temps;
 
+				void outputThread();
 				std::string readFromDevice();
 				void writeToDevice(Command);
 				void goToLoginPrompt();

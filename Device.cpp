@@ -2,7 +2,7 @@
 
 Device::Device(std::string ttyFile) : serial(""), gpioPort(-1), 
 		state(State::LOGIN_PROMPT), terminalPort(open(ttyFile.c_str(),O_RDWR)), 
-		gpio(GpioFacade())
+		gpio(GpioFacade()), reboots(0), bps(0), temps(0)
 {
 		//create variable containing serial settings
 		if(tcgetattr(Device::terminalPort, &tty) != 0)
@@ -255,11 +255,15 @@ bool Device::isBPRunning()
 void Device::reboot() 
 { 
 		if (this->state != State::LOGIN_PROMPT)
+		{
 				this->goToLoginPrompt();
+				reboots++;
+		}
 		else
 		{
 				this->goToDebugMenu();
 				this->goToLoginPrompt();
+				reboots++;
 		}
 }
 
