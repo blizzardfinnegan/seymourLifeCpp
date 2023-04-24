@@ -97,6 +97,7 @@ class Device
 				void startBP();
 				void cancelBP();
 				void reboot();
+				bool isRebooted();
 				~Device();
 };
 #endif

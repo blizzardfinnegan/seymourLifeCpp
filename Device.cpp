@@ -225,6 +225,16 @@ void Device::reboot()
 		}
 }
 
+bool Device::isRebooted()
+{
+		if(this->state == State::LOGIN_PROMPT) return true;
+		else
+		{
+				this->goToLoginPrompt();
+				return true;
+		}
+}
+
 Device::~Device()
 {
 		close(this->terminalPort);

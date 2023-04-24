@@ -118,7 +118,20 @@ void singleDeviceIterations(Device device, std::pair<DeviceLog,OutputWriter> log
 						device.startBP();
 						while(!device.isBPRunning()){}
 						log.successfulBP();
+						writer.writeLog(log);
 				}
+				for(int j = 0; j < TEMP_CYCLES_PER_ITERATION; j++)
+				{
+						device.startTemp();
+						while(!device.isTempRunning()){}
+						device.stopTemp();
+						log.successfulTemp();
+						writer.writeLog(log);
+				}
+				device.reboot();
+				while(!device.isRebooted()) {}
+				log.successfulReboot();
+				writer.writeLog(log);
 		}
 }
 
