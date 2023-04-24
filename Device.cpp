@@ -1,8 +1,7 @@
 #include "Device.hpp"
 
 Device::Device(std::string ttyFile) : serial(""), gpioPort(-1), 
-		state(State::LOGIN_PROMPT), terminalPort(open(ttyFile.c_str(),O_RDWR)), 
-		gpio(GpioFacade()), reboots(0), bps(0), temps(0)
+		state(State::LOGIN_PROMPT), terminalPort(open(ttyFile.c_str(),O_RDWR)) 
 {
 		//create variable containing serial settings
 		if(tcgetattr(Device::terminalPort, &tty) != 0)
@@ -69,37 +68,8 @@ void Device::goToLoginPrompt()
 						case State::DEBUG_MENU:
 						case State::BRIGHTNESS_MENU:
 						case State::LIFECYCLE_MENU:
-						case State::BP_MENU:
 								this->writeToDevice(Command::QUIT);
 								this->state = State::LOGIN_PROMPT;
-								break;
-				}
-		};
-}
-
-void Device::goToBPMenu()
-{
-		while(this->state != State::BP_MENU)
-		{
-				switch (this->state)
-				{
-						case State::BP_MENU:
-								return;
-						case State::DEBUG_MENU:
-								this->writeToDevice(Command::ENTER_BP_MENU);
-								this->state = State::BP_MENU;
-								return;
-						case State::BRIGHTNESS_MENU:
-								this->writeToDevice(Command::UP_MENU_LEVEL);
-								this->state = State::LIFECYCLE_MENU;
-								break;
-						case State::LIFECYCLE_MENU:
-								this->writeToDevice(Command::UP_MENU_LEVEL);
-								this->state = State::DEBUG_MENU;
-								break;
-						case State::LOGIN_PROMPT:
-								this->writeToDevice(Command::LOGIN);
-								this->state = State::DEBUG_MENU;
 								break;
 				}
 		};
@@ -113,7 +83,6 @@ void Device::goToDebugMenu()
 				{
 						case State::DEBUG_MENU:
 								return;
-						case State::BP_MENU:
 						case State::LIFECYCLE_MENU:
 								this->writeToDevice(Command::UP_MENU_LEVEL);
 								this->state = State::DEBUG_MENU;
@@ -142,10 +111,6 @@ void Device::goToBrightnessMenu()
 								this->writeToDevice(Command::ENTER_LIFECYCLE_MENU);
 								this->state = State::LIFECYCLE_MENU;
 								break;
-						case State::BP_MENU:
-								this->writeToDevice(Command::UP_MENU_LEVEL);
-								this->state = State::DEBUG_MENU;
-								break;
 						case State::LIFECYCLE_MENU:
 								this->writeToDevice(Command::ENTER_BRIGHTNESS_MENU);
 								this->state = State::BRIGHTNESS_MENU;
@@ -159,6 +124,7 @@ void Device::goToBrightnessMenu()
 }
 
 void Device::setSerial(std::string serial) { this->serial = serial; }
+void Device::passGPIO(GpioFacade gpio) { this->gpio = gpio; }
 bool Device::setGPIO(int pinAddress) 
 { 
 		if(this->gpio.isValidAddress(pinAddress)) 
@@ -225,19 +191,13 @@ bool Device::isTempRunning()
 
 void Device::startBP()
 {
-		this->goToBPMenu();
+		this->goToLifecycleMenu();
 		this->writeToDevice(Command::START_BP);
-}
-
-void Device::cancelBP()
-{
-		this->goToBPMenu();
-		this->writeToDevice(Command::CANCEL_BP);
 }
 
 bool Device::isBPRunning()
 {
-		this->goToBPMenu();
+		this->goToLifecycleMenu();
 		this->writeToDevice(Command::CHECK_BP_STATE);
 		std::string response = this->readFromDevice();
 		size_t bpOnIndex = response.find(TemplateResponseStrings.at(Response::BP_ON));
@@ -257,13 +217,11 @@ void Device::reboot()
 		if (this->state != State::LOGIN_PROMPT)
 		{
 				this->goToLoginPrompt();
-				reboots++;
 		}
 		else
 		{
 				this->goToDebugMenu();
 				this->goToLoginPrompt();
-				reboots++;
 		}
 }
 

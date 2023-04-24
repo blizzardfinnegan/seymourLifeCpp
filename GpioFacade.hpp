@@ -5,11 +5,12 @@
 class GpioFacade
 {
 	private:
-		const std::set<int> RELAY_PINS;
+		const static std::set<int> RELAY_PINS;
 
     public:
 		GpioFacade();
 		bool isValidAddress(int);
+		static std::set<int> getPinSet();
 		bool relayHigh(int);
 		bool relayLow(int);
 };

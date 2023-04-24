@@ -9,9 +9,13 @@ class DeviceLog
 				int bps;
 				int temps;
 		public:
-				DeviceLog(int=0,int=0,int=0);
-				int getReboots();
-				int getSuccessfulBPs();
-				int getSuccessfulTemps();
+				DeviceLog(int reboots=0,int bps=0,int temps=0) : 
+						reboots(reboots), bps(bps), temps(temps) {};
+				void successfulReboot() { this->reboots++; };
+				void successfulBP() { this->bps++; };
+				void successfulTemp() { this->temps++; };
+				int getReboots() { return this->reboots; };
+				int getSuccessfulBPs() { return this->bps; };
+				int getSuccessfulTemps() { return this->temps; };
 };
 #endif

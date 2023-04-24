@@ -7,11 +7,14 @@
 class OutputWriter
 {
 		private:
-				std::ofstream fileOut;
+				std::string serial;
+				std::string datetime;
+				code_machina::BlockingQueue<DeviceLog> queue;
+				void threadFunction(code_machina::BlockingQueue<DeviceLog> writeQueue);
 		public:
-				OutputWriter(std::string,std::string,code_machina::BlockingQueue<DeviceLog>);
-				void write(DeviceLog,std::string);
-				code_machina::BlockingQueue<std::string> getQueue();
+				OutputWriter(std::string,std::string);
+				void closeThread();
+				void writeLog(DeviceLog);
 				~OutputWriter();
 };
 

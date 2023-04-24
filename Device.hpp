@@ -16,14 +16,13 @@ const int errorBufferSize = 256;
 const int msgBufferSize = 4096;
 enum State
 { 
-		LOGIN_PROMPT, DEBUG_MENU, BP_MENU, LIFECYCLE_MENU, BRIGHTNESS_MENU 
+		LOGIN_PROMPT, DEBUG_MENU, LIFECYCLE_MENU, BRIGHTNESS_MENU 
 };
 
 enum Command 
 {
-		QUIT, ENTER_BP_MENU, START_BP, CANCEL_BP, CHECK_BP_STATE, 
-		ENTER_LIFECYCLE_MENU, ENTER_BRIGHTNESS_MENU, BRIGHTNESS_HIGH, 
-		BRIGHTNESS_LOW, READ_TEMP, UP_MENU_LEVEL, REDRAW_MENU, 
+		QUIT, START_BP, CHECK_BP_STATE, ENTER_LIFECYCLE_MENU, ENTER_BRIGHTNESS_MENU, 
+		BRIGHTNESS_HIGH, BRIGHTNESS_LOW, READ_TEMP, UP_MENU_LEVEL, REDRAW_MENU, 
 		LOGIN, NEWLINE
 };
 
@@ -35,9 +34,7 @@ enum Response
 const std::map<Command,std::string> CommandString = 
 {
 		{ QUIT, "q\n" },
-		{ENTER_BP_MENU,"n"},
-		{START_BP,"s"},
-		{CANCEL_BP,"c"},
+		{START_BP,"c"},
 		{CHECK_BP_STATE,"C"},
 		{ENTER_LIFECYCLE_MENU, "L"},
 		{ENTER_BRIGHTNESS_MENU, "B"},
@@ -46,7 +43,7 @@ const std::map<Command,std::string> CommandString =
 		{READ_TEMP, "h"},
 		{UP_MENU_LEVEL,"\\"},
 		{REDRAW_MENU,"?"},
-		{LOGIN,"root\npython3 -m debugmenu; shutdown -r now"},
+		{LOGIN,"root\npython3 -m debugmenu; shutdown -r now\n"},
 		{NEWLINE,"\n"}
 };
 
@@ -76,21 +73,18 @@ class Device
 				State state;
 				char errorBuffer[errorBufferSize];
 				char msgBuffer[msgBufferSize];
-				int reboots;
-				int bps;
-				int temps;
 
 				void outputThread();
 				std::string readFromDevice();
 				void writeToDevice(Command);
 				void goToLoginPrompt();
-				void goToBPMenu();
 				void goToDebugMenu();
 				void goToLifecycleMenu();
 				void goToBrightnessMenu();
 		public:
 				Device(std::string);
 				void setSerial(std::string);
+				void passGPIO(GpioFacade);
 				bool setGPIO(int);
 				bool startTemp();
 				bool stopTemp();

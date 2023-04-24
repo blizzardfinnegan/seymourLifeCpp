@@ -29,7 +29,9 @@ volatile unsigned *gpio;
 #define GPIO_SET *(gpio+7)  // sets   bits which are 1 ignores bits which are 0
 #define GPIO_CLR *(gpio+10) // clears bits which are 1 ignores bits which are 0
 
-GpioFacade::GpioFacade() : RELAY_PINS({4, 5, 6, 12, 13, 17, 18, 19, 20, 26})
+const std::set<int> GpioFacade::RELAY_PINS{4, 5, 6, 12, 13, 17, 18, 19, 20, 26};
+
+GpioFacade::GpioFacade()
 {
    /* open /dev/mem */
    if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
@@ -87,3 +89,5 @@ bool GpioFacade::relayLow(int address)
 		}
 		else return false;
 }
+
+std::set<int> GpioFacade::getPinSet() { return GpioFacade::RELAY_PINS; }
