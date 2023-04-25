@@ -2,37 +2,35 @@
 #include "DeviceLog.hpp"
 #include "GpioFacade.hpp"
 #include "OutputFacade.hpp"
-#include "BlockingCollection.h"
 #include <ctime>
 #include <thread>
 #include <bits/stdc++.h>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <algorithm>
 #include <fstream>
 #include <list>
 #include <utility>
+#include <vector>
+#include <map>
 
 const std::string VERSION = "2.0.0";
 int iterationCount = -1;
 const int BP_CYCLES_PER_ITERATION = 3;
 const int TEMP_CYCLES_PER_ITERATION = 2;
 
-code_machina::BlockingQueue<std::string> loggingQueue(INT_MAX);
-
-std::list<Device> deviceList{};
+std::vector<Device> deviceList{};
 std::set<int> remainingGpioPins {GpioFacade::getPinSet()};
-std::map<Device,std::pair<DeviceLog,OutputWriter>> deviceMap {};
 
 time_t currentUnixTimestamp = time(0);
 tm *localTime = localtime(&currentUnixTimestamp);
 char datetime[30] {};
 
 void setIterationCount();
-void logWriter(code_machina::BlockingQueue<std::string>);
-void singleDeviceIterations(Device, std::pair<DeviceLog, OutputWriter>, int);
+void singleDeviceIterations(Device&, std::pair<DeviceLog&,OutputWriter&>, int);
 
 int main()
 {
+		std::map<Device,std::pair<DeviceLog&,OutputWriter&>> deviceMap{};
 		sprintf(datetime, "%.4i-%.2i-%.2i_%.2i.%.2i.%.2i", 
 						(1900 + localTime->tm_year),
 						(1+localTime->tm_mon),
@@ -42,18 +40,13 @@ int main()
 						(localTime->tm_sec));
 		try
 		{	
-				std::thread loggingThread(logWriter,loggingQueue);
-				loggingThread.detach();
-				loggingQueue.add("=====================");
-				loggingQueue.add("Seymour Life v. "+VERSION);
-				loggingQueue.add("=====================");
-				const std::experimental::filesystem::path devDirectory{"/dev"};
-				for(const auto& file : std::experimental::filesystem::directory_iterator{devDirectory})
+				const std::filesystem::path devDirectory{"/dev"};
+				for(const auto& file : std::filesystem::directory_iterator{devDirectory})
 				{
 						if(file.path().string().find("ttyUSB") == std::string::npos) continue;
 						std::string serialPath = file.path().string();
-						loggingQueue.add("Opening serial port " +serialPath);
-						deviceList.push_front(Device (serialPath));
+						//loggingQueue.add("Opening serial port " +serialPath);
+						deviceList.push_back(Device (serialPath));
 				}
 
 				for(Device device : deviceList) 
@@ -61,9 +54,8 @@ int main()
 						device.darkenScreen();
 						DeviceLog log{};
 						OutputWriter writer{device.getSerial(),datetime};
-						std::pair<DeviceLog,OutputWriter> logAndWriter{log,writer};
-						std::pair<Device,std::pair<DeviceLog,OutputWriter>> completeDevice {device, logAndWriter};
-						deviceMap.insert(completeDevice);
+						std::pair<DeviceLog&,OutputWriter&> logAndWriter = std::make_pair(std::ref(log),std::ref(writer));
+						deviceMap.emplace(device,logAndWriter);
 				}
 
 				for(Device device : deviceList)
@@ -94,20 +86,20 @@ int main()
 
 				for(const auto &device : deviceList)
 				{
-						std::thread singleDeviceIterations(device, deviceMap.at(device), iterationCount);
+						std::thread singleDeviceIterations(std::ref(device), std::ref(deviceMap.at(device)), std::ref(iterationCount));
 						singleDeviceIterations.detach();
 				}
 		}
 		catch(...)
 		{
-				loggingQueue.add("Caught error! Closing gracefully...");
-				loggingQueue.complete_adding();
+				//loggingQueue.add("Caught error! Closing gracefully...");
+				//loggingQueue.complete_adding();
 		}
 		return 0;
 }
 
 
-void singleDeviceIterations(Device device, std::pair<DeviceLog,OutputWriter> logAndWriter, int iterationCount)
+void singleDeviceIterations(Device& device, std::pair<DeviceLog&,OutputWriter&> logAndWriter, int iterationCount)
 {
 		DeviceLog &log = logAndWriter.first;
 		OutputWriter &writer = logAndWriter.second;
@@ -157,25 +149,4 @@ void setIterationCount()
 		}
 		std::string logMessage;
 		logMessage = "New iteration count: " + std::to_string(iterationCount);
-		loggingQueue.add(logMessage);
 }
-
-void logWriter(code_machina::BlockingQueue<std::string> loggingQueue)
-{
-		char logName[30];
-		sprintf(logName, "logs/%s.log", datetime);
-
-		std::ofstream logFile;
-
-		logFile.open(logName, std::ios::app);
-
-		while(!loggingQueue.is_completed())
-		{
-				std::string input;
-				if(loggingQueue.take(input) == code_machina::BlockingCollectionStatus::Ok)
-						logFile << input << std::endl;
-		}
-
-		logFile.close();
-};
-
